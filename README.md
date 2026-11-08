@@ -675,12 +675,12 @@ governance, including:
 
 ## Author
 
-**\[Mohammad Sajidh Ali\]**\
-Full-Stack Developer
+**Mohammad Sajidh Ali**  
+Full-Stack Developer | React.js | TypeScript | Node.js | Express.js
 
--   Portfolio: \[[](https://sajidhh-portfolio.vercel.app/)\]
--   LinkedIn: \[[](https://www.linkedin.com/in/mohammad-sajidh-ali-633bb3212/)]
--   GitHub: \[[](https://github.com/sajidhseven)\]
+- **Portfolio:** [Visit My Portfolio](https://sajidhh-portfolio.vercel.app/)
+- **LinkedIn:** [Connect with Me](https://www.linkedin.com/in/mohammad-sajidh-ali-633bb3212/)
+- **GitHub:** [View My GitHub](https://github.com/sajidhseven)
 
 ------------------------------------------------------------------------
 
