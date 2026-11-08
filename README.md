@@ -318,7 +318,7 @@ database name configured for your environment.
 Example for the local development database:
 
 ``` bash
-python generator/load_postgres.py --input generator/output-full --database-url "postgresql://kyc:kycpass@localhost:5432/kycdb?schema=public" --truncate
+python generator/load_postgres.py --input generator/output-full --database-url "postgresql://kyc:kycpass@localhost:5432/kycdb" --truncate
 ```
 
 > **Important:** `--truncate` clears the target application tables
