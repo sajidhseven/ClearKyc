@@ -1,0 +1,253 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum CustomerState {
+  DRAFT
+  PENDING_REVIEW
+  APPROVED
+  REJECTED
+  ACTIVE
+  SUSPENDED
+}
+
+enum RiskLevel {
+  LOW
+  MEDIUM
+  HIGH
+}
+
+enum DocumentStatus {
+  PENDING
+  VERIFIED
+  REJECTED
+  EXPIRED
+}
+
+enum VerificationStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+enum ReviewStatus {
+  OPEN
+  IN_PROGRESS
+  OVERDUE
+  CLOSED
+}
+
+enum AlertStatus {
+  OPEN
+  ACKNOWLEDGED
+  RESOLVED
+}
+
+enum UserRole {
+  SYSTEM_ADMIN
+  OPERATIONS_ANALYST
+  RISK_REVIEWER
+}
+
+enum AlertType {
+  DOCUMENT_EXPIRING
+  DOCUMENT_EXPIRED
+  REVIEW_DUE
+  REVIEW_OVERDUE
+  KYC_INCOMPLETE
+  OWNERSHIP_EXCEPTION
+}
+
+model CustomerType {
+  id          String     @id
+  name        String     @unique
+  description String?
+  customers   Customer[]
+}
+
+model Customer {
+  id               String                @id
+  customerTypeId   String
+  customerType     CustomerType          @relation(fields: [customerTypeId], references: [id])
+  legalName        String
+  email            String                @unique
+  phone            String?
+  country          String
+  city             String?
+  onboardingDate   DateTime
+  state            CustomerState         @default(DRAFT)
+  declaredRisk     RiskLevel
+  documents        Document[]
+  riskRatings      RiskRating[]
+  reviews          ReviewCase[]
+  alerts           Alert[]
+  auditEvents      AuditEvent[]
+  business         BusinessEntity?
+  requirementLinks CustomerRequirement[]
+  createdAt        DateTime              @default(now())
+  updatedAt        DateTime              @updatedAt
+
+  @@index([state, declaredRisk])
+}
+
+model KYCRequirement {
+  id            String                @id
+  documentType  String
+  name          String
+  mandatory     Boolean               @default(true)
+  minRiskLevel  RiskLevel             @default(LOW)
+  effectiveFrom DateTime
+  effectiveTo   DateTime?
+  customerLinks CustomerRequirement[]
+}
+
+model CustomerRequirement {
+  customerId    String
+  requirementId String
+  customer      Customer       @relation(fields: [customerId], references: [id])
+  requirement   KYCRequirement @relation(fields: [requirementId], references: [id])
+  effectiveFrom DateTime
+  effectiveTo   DateTime?
+
+  @@id([customerId, requirementId])
+}
+
+model Document {
+  id              String         @id
+  customerId      String
+  customer        Customer       @relation(fields: [customerId], references: [id])
+  documentType    String
+  documentNumber  String?
+  issueDate       DateTime
+  expiryDate      DateTime?
+  uploadedAt      DateTime
+  status          DocumentStatus
+  nameMatchStatus String         @default("MATCH")
+  fileHash        String
+  verifications   Verification[]
+  alerts          Alert[]
+  createdAt       DateTime       @default(now())
+
+  @@index([customerId, documentType, status])
+  @@index([expiryDate])
+}
+
+model Verification {
+  id         String             @id
+  documentId String
+  document   Document           @relation(fields: [documentId], references: [id])
+  status     VerificationStatus
+  verifiedAt DateTime?
+  reviewerId String?
+  method     String
+  createdAt  DateTime           @default(now())
+
+  @@index([documentId, createdAt])
+}
+
+model RiskRating {
+  id            String    @id
+  customerId    String
+  customer      Customer  @relation(fields: [customerId], references: [id])
+  level         RiskLevel
+  score         Int
+  reasonCode    String
+  effectiveFrom DateTime
+  effectiveTo   DateTime?
+
+  @@index([customerId, effectiveFrom])
+}
+
+model BusinessEntity {
+  id                 String            @id
+  customerId         String            @unique
+  customer           Customer          @relation(fields: [customerId], references: [id])
+  registrationNumber String            @unique
+  incorporationDate  DateTime
+  jurisdiction       String
+  status             String
+  owners             BeneficialOwner[]
+}
+
+model BeneficialOwner {
+  id               String         @id
+  businessEntityId String
+  business         BusinessEntity @relation(fields: [businessEntityId], references: [id])
+  ownerName        String
+  ownershipPct     Decimal        @db.Decimal(5, 2)
+  isPep            Boolean        @default(false)
+  effectiveFrom    DateTime
+  effectiveTo      DateTime?
+
+  @@index([businessEntityId, effectiveTo])
+}
+
+model ReviewCase {
+  id         String       @id
+  customerId String
+  customer   Customer     @relation(fields: [customerId], references: [id])
+  openedDate DateTime
+  dueDate    DateTime
+  closedDate DateTime?
+  status     ReviewStatus
+  resolution String?
+  reviewType String
+
+  alerts Alert[]
+
+  @@index([status, dueDate])
+}
+
+model Alert {
+  id         String   @id
+  customerId String
+  customer   Customer @relation(fields: [customerId], references: [id])
+
+  documentId String?
+  document   Document? @relation(fields: [documentId], references: [id])
+
+  reviewCaseId String?
+  reviewCase   ReviewCase? @relation(fields: [reviewCaseId], references: [id], onDelete: SetNull, onUpdate: Cascade)
+
+  type        AlertType
+  triggerDate DateTime
+  dueDate     DateTime?
+  severity    String
+  status      AlertStatus @default(OPEN)
+  resolvedAt  DateTime?
+
+  @@index([status, severity])
+  @@index([reviewCaseId])
+}
+
+model AuditEvent {
+  id            String    @id
+  customerId    String?
+  customer      Customer? @relation(fields: [customerId], references: [id])
+  entityType    String
+  entityId      String
+  eventType     String
+  eventAt       DateTime  @default(now())
+  actorId       String
+  beforeJson    Json?
+  afterJson     Json?
+  correlationId String?
+
+  @@index([entityType, entityId, eventAt])
+}
+
+model User {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  passwordHash String
+  fullName     String
+  role         UserRole
+  isActive     Boolean  @default(true)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}

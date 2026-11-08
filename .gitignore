@@ -1,0 +1,31 @@
+﻿# Dependencies
+**/node_modules/
+
+# Build output
+**/dist/
+**/build/
+**/.vite/
+
+# Environment files and secrets
+**/.env
+**/.env.*
+!**/.env.example
+
+# Python
+**/.venv/
+**/venv/
+**/__pycache__/
+*.py[cod]
+
+# Generated datasets and local backups
+generator/output*/
+backups/
+*.dump
+*.sql.bak
+backend/prisma/schema-backup*.prisma
+
+# Local development
+*.log
+*.tsbuildinfo
+.DS_Store
+Thumbs.db
