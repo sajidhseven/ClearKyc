@@ -236,8 +236,8 @@ docker compose version
 Replace the URL with the public GitHub repository URL:
 
 ``` bash
-git clone <YOUR_GITHUB_REPOSITORY_URL>
-cd ClearKYC
+git clone https://github.com/sajidhseven/ClearKyc.git
+cd ClearKyc
 ```
 
 ### 2. Start PostgreSQL
